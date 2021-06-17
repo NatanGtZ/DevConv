@@ -1,0 +1,22 @@
+Requisitos:
+
+-Cadastro de Usuarios
+
+-Cadastro de Unidades
+
+-Cadastro de Ativos da Unidade(moradores, veículos, pets)
+
+-Mural de Avisos
+
+-Documentos Oficiais do Condomínio
+
+-Reserva das áreas comuns(Lista negra de Datas)
+
+-Achados e Perdidos
+
+-Livro de Ocorrências
+
+-Boletos	
+
+-
+
