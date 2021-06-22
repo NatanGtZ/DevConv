@@ -71,24 +71,55 @@ class Createalltables extends Migration
         Schema::create('billets', function (Blueprint $table){
             $table->id();
             $table->integer('id_unit');
-            $table->string('title ');
+            $table->string('title');
             $table->string('fileurl');
         });
 
         Schema::create('warnings', function (Blueprint $table){
             $table->id();
             $table->integer('id_unit');
-            $table->string('title ');
-            $table->string('status')->default('IN_REVIEW'); // IN_REVIEW RESOLVED
-            $table-date('datecreated');
+            $table->string('title');
+            $table->string('status')->default('IN_REVIEW'); // IN_REVIEW, RESOLVED
+            $table->date('datecreated');
+            $table->text('photos');
         });
 
-      
+        Schema::create('foundandlost', function (Blueprint $table){
+            $table->id();
+            $table->string('status')->default('LOST'); //LOST RECOVERED
+            $table->string('description');
+            $table->string('where');
+            $table->date('datecreated');
+        });
+
+        Schema::create('areas', function (Blueprint $table){
+            $table->id();
+            $table->integer('allowed')->default(1);
+            $table->string('title');
+            $table->string('cover');
+            $table->string('days');  //0,1,2,3,4,5,6
+            $table->time('start_time');
+            $table->time('end_time');
+        });
 
 
-        
-    }
+        Schema::create('areadisableddays', function (Blueprint $table){
+            $table->id();
+            $table->integer('id_area');
+            $table->date('day');
+        });
 
+        Schema::create('reservations', function (Blueprint $table){
+            $table->id();
+            $table->integer('id_unit');
+            $table->integer('id_area');
+            $table->datetime('reservation_date');
+
+        });
+
+
+
+}
     /**
      * Reverse the migrations.
      *
@@ -96,6 +127,19 @@ class Createalltables extends Migration
      */
     public function down()
     {
-        //
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('unit');
+        Schema::dropIfExists('unitpeoples');
+        Schema::dropIfExists('unitvehicles');
+        Schema::dropIfExists('unitpets');
+        Schema::dropIfExists('walll');
+        Schema::dropIfExists('walllikes');
+        Schema::dropIfExists('docs');
+        Schema::dropIfExists('billets');
+        Schema::dropIfExists('warning');
+        Schema::dropIfExists('foundandlost');
+        Schema::dropIfExists('areas');
+        Schema::dropIfExists('areasdisableddays');
+        Schema::dropIfExists('reservation');
     }
 }
