@@ -18,7 +18,7 @@ class Createalltables extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('cpf')->unique();
-            $table->string('senha');
+            $table->string('password');
         });
 
         Schema::create('units', function (Blueprint $table){

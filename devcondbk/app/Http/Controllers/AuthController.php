@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\User; 
+use App\Models\Unit; 
 
 class AuthController extends Controller
 {
@@ -48,6 +49,30 @@ class AuthController extends Controller
             $newUser->cpf = $cpf;
             $newUser->password = $hash;
             $newUser->save();
+
+            $token = auth()->attempt([
+                'cpf' => $cpf,
+                'password' => $password
+
+            ]);
+
+            if(!$token){
+                $array['error'] = 'Deu erro';
+                return $array;
+            }
+
+            $array['token']= $token;
+
+            $user = auth()->user();
+            $array['user'] = $user;
+
+            $properties = Unit::select(['id', 'name'])
+            ->where('id_owner', $user['id'])
+            ->get();
+
+
+            $array['user']['properties'] = $properties; 
+            
 
         }else {
             //código de erro caso o validador falhe
