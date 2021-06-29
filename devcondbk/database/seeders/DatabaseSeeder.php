@@ -26,11 +26,11 @@ class DatabaseSeeder extends Seeder
        ]);
     DB::table('units')->insert([
         'name' => 'APT 200',
-        'id_owner' => ''
+        'id_owner' => '0'
     ]);
     DB::table('units')->insert([
         'name' => 'APT 201',
-        'id_owner' => ''
+        'id_owner' => '0'
     ]);
 
 
@@ -60,14 +60,19 @@ class DatabaseSeeder extends Seeder
         'end_time' => '23:00:00'
     ]);
 
-    DB::table('areas')->insert([
-        'allowed' => '1',
-        'title' => 'Churrasqueria',
-        'cover' => 'barbecue.jpg',
-        'days' => '4,5,6',
-        'start_time' => '09:00:00',
-        'end_time' => '23:00:00'
+    DB::table('walls')->insert([
+        'title' => 'Titulo de aviso de teste',
+        'body' => 'Lorem Ipsum sdaadjqkwnfqe',
+        'datecreated' => '2020-12-20 15:00:00'
     ]);
+    DB::table('walls')->insert([
+        'title' => 'Alerta Geral para Todos',
+        'body' => 'dasjjainlnasklnkdlnmas',
+        'datecreated' => '2020-12-20 18:00:00'
+    ]);
+    
+
+    
 
     }
 }
