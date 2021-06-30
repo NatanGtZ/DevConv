@@ -41,7 +41,7 @@ Route::middleware('auth:api')->group(function(){
         Route::post('/wall/{id}/like', [WallController::class, 'like']);
 
         //documentos
-        Route::get('/dosc', [DocController::class, 'getAll']);
+        Route::get('/docs', [DocController::class, 'getAll']);
 
         //Livro de Ocorrências
         Route::get('/warnings', [WarningController::class, 'getMyWarnings']);
