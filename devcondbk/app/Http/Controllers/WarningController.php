@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 
 use App\Models\Warning;
@@ -23,14 +25,14 @@ class WarningController extends Controller
             ->where('id_owner', $user['id'])
             ->count();
 
-            if(unit > 0) {
+            if($unit > 0) {
                 
                 $warnings = Warning::where('id_unit', $property)
                 ->orderBy('datecreated', 'DESC')
                 ->orderBy('id', 'DESC')
                 ->get();
 
-                foreach($warning as $warnKey => $warnValue){
+                foreach($warnings as $warnKey => $warnValue){
                     $warnings[$warnKey]['datecreated'] = date('d/m/Y', 
                     strtotime($warnValue['datecreated']));
                     $photoList = [];
@@ -55,6 +57,19 @@ class WarningController extends Controller
         }else {
             $array['error'] = 'A propriedade é necessária';
         }
+
+        return $array;
+    }
+
+
+    public function addWarningFile(Request $request) {
+        $array = ['error' => ''];
+
+        $validator = Validator::make($request->all, [
+            'photo' => 'required|file|mimes:jpg,png',
+            
+
+        ]);
 
         return $array;
     }
