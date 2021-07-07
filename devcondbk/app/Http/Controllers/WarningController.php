@@ -65,11 +65,63 @@ class WarningController extends Controller
     public function addWarningFile(Request $request) {
         $array = ['error' => ''];
 
-        $validator = Validator::make($request->all, [
+        $validator = Validator::make($request->all(), [
             'photo' => 'required|file|mimes:jpg,png',
-            
 
         ]);
+
+        if(!$validator->fails()) {
+            $file = $request->file('photo')->store('public');
+
+            // foto quardada no storage
+            $array['photo'] = asset(Storage::url($file));
+        } else {
+            $array['error'] = $validator->errors()->first();
+        }
+
+        return $array;
+    }
+
+    public function setWarning(Request $request) {
+        $array = ['error' => ''];
+
+        $validator = Validator::make($request->all(), [
+            'title' => 'required',
+            'property' => 'required'
+        ]);
+
+        if(!$validator->fails()) {
+            $title = $request->input('title');
+            $property = $request->input('property');
+            $list = $request->input('list');
+
+            //adicionar warning
+            $newWarn = new Warning();
+            $newWarn->id_unit = $property;
+            $newWarn->title = $title;
+            $newWarn->status = 'IN_REVIEW';
+            $newWarn->datecreated = date('Y-m-d');
+
+            if($list &&  is_array($list)) {
+                $photos = [];
+
+                foreach($list as $listItem) {
+                    $url  = explode('/', $listItem);
+                    $photos[] = end($url);
+                }
+
+                $newWarn->photos = implode(',', $photos);
+            } else {
+                $newWarn->photos = '';
+            }
+
+            $newWarn->save();
+
+
+        }else {
+            $array['error'] = $validator->errors()->first();
+            return $array;
+        }
 
         return $array;
     }
