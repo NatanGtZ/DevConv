@@ -87,6 +87,7 @@ class Createalltables extends Migration
         Schema::create('foundandlost', function (Blueprint $table){
             $table->id();
             $table->string('status')->default('LOST'); //LOST RECOVERED
+            $table->string('photo');
             $table->string('description');
             $table->string('where');
             $table->date('datecreated');
