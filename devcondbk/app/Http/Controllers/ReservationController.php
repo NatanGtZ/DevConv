@@ -82,35 +82,56 @@ class ReservationController extends Controller
     }
 
 
-    public function getDisabledDates() {
+    public function getDisabledDates($id) {
+        $array = ['error' => ''];
 
+        $area = Area::find($id);
+        if($area) {
+
+            // dias disabled padrão
+            $disabledDays = AreaDisabledDay::where('id_area', $id)->get();
+            foreach($disabledDays as $disabledDay){
+                $array['list'][] = $disabledDay['day'];
+            }
+
+
+            //diaas disabled atraves do allowed
+            $allowedDays = explode(',', $area['days']);
+            $offDays = [];
+            for($q = 0; $q < 7; $q++){
+                if(!in_array($q, $allowedDays)){
+                    $offDays[] = $q;
+                }
+            }
+
+           //listar dias proibidos 3 meses para frente
+            $start = time();
+            $end = strtotime('+3 months');
+            $current = $start;
+            $keep = true;
+
+            for(
+                $current = $start; 
+                $current < $end;
+                $current = strtotime('+1 day', $current)
+            ) {
+                $wd = date('w', $current);
+
+                    if(in_array($wd, $offDays)) {
+                        $array['list'][] = date('Y-m-d', $current);
+                    }                
+            }
+
+        } else {
+            $array['error'] = 'Área Inexistente';
+        }
+
+        return $array;
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
     
-    // fazendo a reserva
+     // fazendo a reserva
        public function setReservation($id, Request $request) {
         $array = ['error' => ''];
 
@@ -192,6 +213,169 @@ class ReservationController extends Controller
         return $array;
     }
         
+    // lista de disponibilidade de horários
+    public function getTimes($id, Request $request) {
+        $array = ['error' => '', 'list' => []];
+
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date_format:Y-m-d'
+        ]);
+
+        if(!$validator->fails()) {
+            $date = $request->input('date');
+            $area = Area::find($id);
+
+            if($area){
+
+                $can = true; 
+
+                //verificar se é dia disabled 
+                $existingDisabledDay = AreaDisabledDay::where('id_area', $id)
+                ->where('day', $date)
+                ->count();
+                if($existingDisabledDay > 0 ) {
+                    $can = false;
+                }
+
+
+
+                // verificar se é dia permitido
+                $allowedDays = explode(',', $area['days']);
+                $weekday = date('w', strtotime($date));
+                if(!in_array($weekday, $allowedDays)) {
+                    $can = false;
+                }
+
+                if($can) {
+                    $start = strtotime($area['start_time']);
+                    $end = strtotime($area['end_time']);
+
+                    $times = [];
+
+                    for(
+                        $lastTime = $start;
+                        $lastTime < $end;
+                        $lastTime = strtotime('+1 hour', $lastTime)
+                    ) {
+                        
+                        $times[] = $lastTime;
+
+                    }
+
+                   $timeList =[];
+                   foreach($times as $time) {
+                       $timeList[] = [
+                            'id' => date('h:i:s', $time),
+                            'title' => date('h:i', $time).' - '.date('H:i', strtotime('+1 hour', $time))
+                       ];
+                   }
+
+                   //removendo as reservas
+                   $reservations = Reservation::where('id_area', $id)
+                   ->whereBetween('reservation_date', [
+                        $date.' 00:00:00',
+                        $date.' 23:59:59'
+                   ])
+                   ->get();
+
+                    $toRemove = [];
+                    foreach($reservations as $reservation) {
+                        $time = date('H:i:s', strtotime($reservation['reservation_date']));
+                        $toRemove[] = $time;
+                    }
+
+
+                   foreach($timeList as $TimeItem){
+                       if(!in_array($TimeItem['id'], $toRemove)) {
+                           $array['list'][] = $TimeItem;
+                       }
+                   }
+
+                }
+
+            } else {
+                $array['error'] = 'área Inexistente';
+            }
+
+
+        } else {
+            $array['error'] = $validator->errors()->first();
+            return $array;
+        }
+
+        return $array;
+    }
+
+
+    public function getMyReservations(Request $request) {
+        $array = ['error' => '', 'list' => []];
+
+        $property = $request->input('property');
+        if($property){
+            $unit = Unit::find($property);
+            if($unit) {
+
+                $reservations = Reservation::where('id_unit', $property)
+                ->orderBy('reservation_date', 'DESC')
+                ->get();
+
+                foreach($reservations as $reservation) {
+                    $area = Area::find($reservation['id_area']);
+
+                    $daterev = date('d/m/Y H:i', strtotime($reservation['reservation_date']));
+                    $aftertime = date('H:i', strtotime('+1 hour', strtotime($reservation['reservation_date'])));
+                    $daterev.= ' à '.$aftertime;
+
+                    $array['list'][] = [
+                        'id' => $reservation['id'],
+                        'id_area' => $reservation['id_area'],
+                        'title' => $area['title'],
+                        'cover' => asset('storage/'.$area['cover']),
+                        'datereserved' => $daterev
+                    ];
+
+                }
+
+            } else {
+                $array['error'] = 'Propriedade Inexistente';
+            return $array;
+            }
+
+        }else {
+            $array['error'] = 'Propriedade Necessária';
+            return $array;
+        }
+
+        return $array;
+    }
+
+
+    public function delMyReservation($id) {
+        $array = ['error' => ''];
+
+        $user = auth()->user();
+        $reservation = Reservation::find($id);
+        if($reservation) {
+
+            $unit = Unit::where('id', $reservation['id_unit'])
+            ->where('id_owner', $user['id'])
+            ->count();
+
+
+            if($unit > 0) {
+                Reservation::find($id)->delete();
+            } else {
+                $array['error'] = 'Esta Reserva não é sua';
+                return $array;
+            }
+
+        } else {
+            $array['error'] = 'Reserva Inexistente';
+            return $array;
+        }
+
+        return $array;
+    }
 
 
 }
